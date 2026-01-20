@@ -22,9 +22,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize database
-initializeDatabase();
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
