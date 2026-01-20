@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Adventure-focused design system with nature-inspired colors and gradients */
+
+@layer base {
+  :root {
+    /* Core theme colors */
+    --background: 0 0% 100%;
+    --foreground: 216 15% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 216 15% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 15% 12%;
+
+    /* Adventure primary - Deep forest green */
+    --primary: 158 45% 25%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 158 45% 20%;
+
+    /* Adventure secondary - Warm orange */
+    --secondary: 25 85% 55%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 25 85% 45%;
+
+    /* Mountain muted - Cool gray-blue */
+    --muted: 215 25% 96%;
+    --muted-foreground: 215 15% 45%;
+
+    /* Nature accent - Mountain blue */
+    --accent: 200 80% 45%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 158 45% 25%;
+
+    /* Adventure-specific colors */
+    --adventure-gold: 45 100% 65%;
+    --adventure-forest: 158 60% 15%;
+    --adventure-sky: 200 100% 70%;
+    --adventure-earth: 30 40% 55%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(158 45% 25%), hsl(200 80% 35%));
+    --gradient-adventure: linear-gradient(90deg, hsl(25 85% 55%), hsl(45 100% 65%));
+    --gradient-nature: linear-gradient(180deg, hsl(158 60% 15%), hsl(158 45% 25%));
+    --gradient-sunset: linear-gradient(45deg, hsl(25 85% 55%), hsl(10 80% 60%));
+
+    /* Shadows */
+    --shadow-adventure: 0 10px 30px -5px hsl(158 45% 25% / 0.3);
+    --shadow-card: 0 4px 20px -2px hsl(216 15% 12% / 0.1);
+    --shadow-glow: 0 0 40px hsl(25 85% 55% / 0.4);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark theme for nighttime adventures */
+    --background: 216 25% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 216 20% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 216 20% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 158 45% 35%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 158 45% 30%;
+
+    --secondary: 25 85% 65%;
+    --secondary-foreground: 216 25% 8%;
+    --secondary-hover: 25 85% 55%;
+
+    --muted: 216 15% 18%;
+    --muted-foreground: 215 15% 65%;
+
+    --accent: 200 80% 55%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 216 15% 18%;
+    --input: 216 15% 18%;
+    --ring: 158 45% 35%;
+
+    /* Dark mode gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(158 45% 15%), hsl(200 80% 25%));
+    --gradient-adventure: linear-gradient(90deg, hsl(25 85% 45%), hsl(45 100% 55%));
+    --gradient-nature: linear-gradient(180deg, hsl(158 60% 8%), hsl(158 45% 15%));
+    --shadow-adventure: 0 10px 30px -5px hsl(158 45% 15% / 0.5);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans overflow-x-hidden;
+  }
+
+  /* Custom utility classes */
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-adventure {
+    background: var(--gradient-adventure);
+  }
+
+  .gradient-nature {
+    background: var(--gradient-nature);
+  }
+
+  .shadow-adventure {
+    box-shadow: var(--shadow-adventure);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Adventure-specific animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+}
