@@ -182,14 +182,114 @@ router.get('/export/users', authenticateAdmin, async (req, res) => {
       []
     );
 
-    // For now, return JSON. Will implement Excel export later
-    res.json({
-      data: users,
-      format: 'json',
-      timestamp: new Date().toISOString()
-    });
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const bookings = await all(
+          'SELECT COUNT(*) as count FROM bookings WHERE userId = ?',
+          [user.id]
+        );
+        return {
+          ...user,
+          bookingCount: bookings[0]?.count || 0
+        };
+      })
+    );
+
+    const wb = createUsersWorkbook(usersWithStats);
+    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+    res.send(buffer);
   } catch (err) {
     console.error('Export users error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export bookings data
+router.get('/export/bookings', authenticateAdmin, async (req, res) => {
+  try {
+    const bookings = await all(
+      `SELECT b.*, u.fullName, u.email FROM bookings b
+       LEFT JOIN users u ON b.userId = u.id
+       ORDER BY b.createdAt DESC`,
+      []
+    );
+
+    const wb = createBookingsWorkbook(bookings);
+    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=bookings.xlsx');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Export bookings error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export testimonials data
+router.get('/export/testimonials', authenticateAdmin, async (req, res) => {
+  try {
+    const testimonials = await all(
+      'SELECT * FROM testimonials ORDER BY createdAt DESC',
+      []
+    );
+
+    const wb = createTestimonialsWorkbook(testimonials);
+    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=testimonials.xlsx');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Export testimonials error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export all data
+router.get('/export/all', authenticateAdmin, async (req, res) => {
+  try {
+    const users = await all(
+      'SELECT id, email, fullName, phone, testimonialAllowed, createdAt FROM users ORDER BY createdAt DESC',
+      []
+    );
+
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const bookings = await all(
+          'SELECT COUNT(*) as count FROM bookings WHERE userId = ?',
+          [user.id]
+        );
+        return {
+          ...user,
+          bookingCount: bookings[0]?.count || 0
+        };
+      })
+    );
+
+    const bookings = await all(
+      `SELECT b.*, u.fullName, u.email FROM bookings b
+       LEFT JOIN users u ON b.userId = u.id
+       ORDER BY b.createdAt DESC`,
+      []
+    );
+
+    const testimonials = await all(
+      'SELECT * FROM testimonials ORDER BY createdAt DESC',
+      []
+    );
+
+    const wb = createCombinedWorkbook(usersWithStats, bookings, testimonials);
+    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=export_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Export all error:', err);
     res.status(500).json({ error: err.message });
   }
 });
