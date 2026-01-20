@@ -384,10 +384,11 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                       {/* Login Button */}
                       <button
                         type="submit"
-                        className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        disabled={isLoading}
+                        className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                       >
-                        Login & Explore
-                        <ArrowRight className="h-5 w-5" />
+                        {isLoading ? "Logging in..." : "Login & Explore"}
+                        {!isLoading && <ArrowRight className="h-5 w-5" />}
                       </button>
                     </form>
 
