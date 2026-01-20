@@ -86,20 +86,32 @@ export function initializeDatabase() {
 }
 
 export function run(sql, params = []) {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  const result = stmt.run(...params);
-  return { lastID: result.lastInsertRowid, changes: result.changes };
+  try {
+    const database = getDatabase();
+    const stmt = database.prepare(sql);
+    const result = stmt.run(...params);
+    return Promise.resolve({ lastID: result.lastInsertRowid, changes: result.changes });
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 export function get(sql, params = []) {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  return stmt.get(...params);
+  try {
+    const database = getDatabase();
+    const stmt = database.prepare(sql);
+    return Promise.resolve(stmt.get(...params));
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 export function all(sql, params = []) {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  return stmt.all(...params) || [];
+  try {
+    const database = getDatabase();
+    const stmt = database.prepare(sql);
+    return Promise.resolve(stmt.all(...params) || []);
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
