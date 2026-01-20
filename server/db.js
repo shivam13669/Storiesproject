@@ -1,4 +1,4 @@
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,14 +11,9 @@ let db = null;
 
 export function getDatabase() {
   if (!db) {
-    db = new sqlite3.Database(DB_PATH, (err) => {
-      if (err) {
-        console.error('Database connection error:', err);
-      } else {
-        console.log('Connected to SQLite database');
-      }
-    });
-    db.configure('busyTimeout', 5000);
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+    console.log('Connected to SQLite database');
   }
   return db;
 }
