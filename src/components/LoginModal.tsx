@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, CheckCircle, User, Phone, Search, ChevronDown, X } from "lucide-react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
   DialogContent,
