@@ -100,6 +100,10 @@ const validatePassword = (password: string) => {
 };
 
 export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
+  const { login: authLogin, signup: authSignup } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
