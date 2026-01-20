@@ -1,4 +1,5 @@
-import Database from 'better-sqlite3';
+import initSqlJs from 'sql.js';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -8,22 +9,44 @@ const __dirname = path.dirname(__filename);
 const DB_PATH = path.join(__dirname, '../database.db');
 
 let db = null;
+let SQL = null;
 
-export function getDatabase() {
+async function initSQL() {
+  if (!SQL) {
+    SQL = await initSqlJs();
+  }
+  return SQL;
+}
+
+async function getDatabase() {
   if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
+    await initSQL();
+    
+    if (fs.existsSync(DB_PATH)) {
+      const buffer = fs.readFileSync(DB_PATH);
+      db = new SQL.Database(buffer);
+    } else {
+      db = new SQL.Database();
+    }
     console.log('Connected to SQLite database');
   }
   return db;
 }
 
-export function initializeDatabase() {
-  const database = getDatabase();
+function saveDatabase() {
+  if (db) {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(DB_PATH, buffer);
+  }
+}
 
-  // Users table
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+export async function initializeDatabase() {
+  const database = await getDatabase();
+
+  const tables = [
+    // Users table
+    `CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       fullName TEXT NOT NULL,
@@ -32,23 +55,19 @@ export function initializeDatabase() {
       testimonialAllowed INTEGER DEFAULT 0,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+    )`,
 
-  // Admin table
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS admin (
+    // Admin table
+    `CREATE TABLE IF NOT EXISTS admin (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+    )`,
 
-  // Bookings table
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS bookings (
+    // Bookings table
+    `CREATE TABLE IF NOT EXISTS bookings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
       destinationSlug TEXT NOT NULL,
@@ -63,12 +82,10 @@ export function initializeDatabase() {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+    )`,
 
-  // Testimonials table
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS testimonials (
+    // Testimonials table
+    `CREATE TABLE IF NOT EXISTS testimonials (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER,
       email TEXT,
@@ -79,39 +96,81 @@ export function initializeDatabase() {
       isPublished INTEGER DEFAULT 1,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
-    )
-  `);
+    )`
+  ];
 
+  for (const sql of tables) {
+    try {
+      database.run(sql);
+    } catch (err) {
+      // Table already exists
+    }
+  }
+
+  saveDatabase();
   console.log('Database tables initialized');
 }
 
-export function run(sql, params = []) {
+export async function run(sql, params = []) {
   try {
-    const database = getDatabase();
-    const stmt = database.prepare(sql);
-    const result = stmt.run(...params);
-    return Promise.resolve({ lastID: result.lastInsertRowid, changes: result.changes });
+    const database = await getDatabase();
+    database.run(sql, params);
+    saveDatabase();
+    return { lastID: database.getRowsModified(), changes: database.getRowsModified() };
   } catch (err) {
-    return Promise.reject(err);
+    console.error('Database error:', err);
+    throw err;
   }
 }
 
-export function get(sql, params = []) {
+export async function get(sql, params = []) {
   try {
-    const database = getDatabase();
-    const stmt = database.prepare(sql);
-    return Promise.resolve(stmt.get(...params));
+    const database = await getDatabase();
+    const result = database.exec(sql, params);
+    
+    if (result.length === 0) {
+      return undefined;
+    }
+
+    const columns = result[0].columns;
+    const values = result[0].values[0];
+    
+    if (!values) {
+      return undefined;
+    }
+
+    const row = {};
+    columns.forEach((col, i) => {
+      row[col] = values[i];
+    });
+    return row;
   } catch (err) {
-    return Promise.reject(err);
+    console.error('Database error:', err);
+    throw err;
   }
 }
 
-export function all(sql, params = []) {
+export async function all(sql, params = []) {
   try {
-    const database = getDatabase();
-    const stmt = database.prepare(sql);
-    return Promise.resolve(stmt.all(...params) || []);
+    const database = await getDatabase();
+    const result = database.exec(sql, params);
+    
+    if (result.length === 0) {
+      return [];
+    }
+
+    const columns = result[0].columns;
+    const rows = result[0].values;
+
+    return rows.map(values => {
+      const row = {};
+      columns.forEach((col, i) => {
+        row[col] = values[i];
+      });
+      return row;
+    });
   } catch (err) {
-    return Promise.reject(err);
+    console.error('Database error:', err);
+    throw err;
   }
 }
