@@ -86,40 +86,20 @@ export function initializeDatabase() {
 }
 
 export function run(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    const database = getDatabase();
-    database.run(sql, params, function(err) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve({ lastID: this.lastID, changes: this.changes });
-      }
-    });
-  });
+  const database = getDatabase();
+  const stmt = database.prepare(sql);
+  const result = stmt.run(...params);
+  return { lastID: result.lastInsertRowid, changes: result.changes };
 }
 
 export function get(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    const database = getDatabase();
-    database.get(sql, params, (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(row);
-      }
-    });
-  });
+  const database = getDatabase();
+  const stmt = database.prepare(sql);
+  return stmt.get(...params);
 }
 
 export function all(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    const database = getDatabase();
-    database.all(sql, params, (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows || []);
-      }
-    });
-  });
+  const database = getDatabase();
+  const stmt = database.prepare(sql);
+  return stmt.all(...params) || [];
 }
