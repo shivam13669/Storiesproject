@@ -4,10 +4,7 @@ import { run, get, initializeDatabase } from './db.js';
 async function setupAdmin() {
   try {
     console.log('Initializing database...');
-    initializeDatabase();
-
-    // Wait a moment for database to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await initializeDatabase();
 
     const adminEmail = 'nitinmishra2202@gmail.com';
     const adminPassword = 'stnt@stories123@';
@@ -30,7 +27,6 @@ async function setupAdmin() {
 
     console.log('Admin user created successfully');
     console.log('Email:', adminEmail);
-    console.log('Admin ID:', result.lastID);
     process.exit(0);
   } catch (err) {
     console.error('Setup error:', err);
