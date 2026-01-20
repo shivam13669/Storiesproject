@@ -163,7 +163,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(signupEmail)) {
       setSignupEmailError("Please enter a valid email address (e.g., you@example.com)");
@@ -171,24 +171,42 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     }
     if (!validateInternationalMobile(mobileNumber, selectedCountry.code)) {
       setMobileNumberError("Please enter a valid mobile number for the selected country");
-      alert("Please enter a valid mobile number for the selected country");
       return;
     }
     if (!isPasswordValid) {
-      alert("Password does not meet requirements");
+      toast({
+        title: "Password error",
+        description: "Password does not meet requirements",
+        variant: "destructive",
+      });
       return;
     }
     if (!agreeTerms) {
-      alert("Please agree to terms and conditions");
+      toast({
+        title: "Terms required",
+        description: "Please agree to terms and conditions",
+        variant: "destructive",
+      });
       return;
     }
-    console.log("Signup:", {
-      fullName,
-      signupEmail,
-      mobileNumber,
-      country: selectedCountry,
-      signupPassword,
-    });
+
+    setIsLoading(true);
+    try {
+      await authSignup(signupEmail, fullName, signupPassword, mobileNumber);
+      toast({
+        title: "Signup successful",
+        description: "Your account has been created. Welcome!",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
