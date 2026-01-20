@@ -63,15 +63,53 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Currency + Login */}
+          {/* Currency + Login/User Menu */}
           <div className="hidden md:flex items-center gap-3">
             <CurrencyPicker value={currency} onChange={setCurrency} />
-            <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="text-white/90 hover:text-white font-medium transition-colors"
-            >
-              Login
-            </button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-white/90 hover:text-white font-medium transition-colors">
+                    Hi, {user.fullName.split(' ')[0]}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {!isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <a href="https://support.example.com" className="flex items-center gap-2 cursor-pointer">
+                      <HelpCircle className="h-4 w-4" />
+                      <span>Support & FAQs</span>
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="flex items-center gap-2 cursor-pointer text-red-600">
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="text-white/90 hover:text-white font-medium transition-colors"
+              >
+                Login
+              </button>
+            )}
           </div>
 
           {/* Mobile menu button */}
