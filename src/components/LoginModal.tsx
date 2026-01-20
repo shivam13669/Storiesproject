@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, CheckCircle, User, Phone, Search, ChevronDown, X } from "lucide-react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -98,6 +100,10 @@ const validatePassword = (password: string) => {
 };
 
 export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
+  const { login: authLogin, signup: authSignup } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -131,16 +137,33 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const passwordsMatch = signupPassword && confirmPassword && signupPassword === confirmPassword;
   const isPasswordValid = passwordValidation.isValid && passwordsMatch;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address (e.g., you@example.com)");
       return;
     }
-    console.log("Login:", { email, password });
+
+    setIsLoading(true);
+    try {
+      await authLogin(email, password);
+      toast({
+        title: "Login successful",
+        description: "Welcome back! Redirecting...",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(signupEmail)) {
       setSignupEmailError("Please enter a valid email address (e.g., you@example.com)");
@@ -148,24 +171,42 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     }
     if (!validateInternationalMobile(mobileNumber, selectedCountry.code)) {
       setMobileNumberError("Please enter a valid mobile number for the selected country");
-      alert("Please enter a valid mobile number for the selected country");
       return;
     }
     if (!isPasswordValid) {
-      alert("Password does not meet requirements");
+      toast({
+        title: "Password error",
+        description: "Password does not meet requirements",
+        variant: "destructive",
+      });
       return;
     }
     if (!agreeTerms) {
-      alert("Please agree to terms and conditions");
+      toast({
+        title: "Terms required",
+        description: "Please agree to terms and conditions",
+        variant: "destructive",
+      });
       return;
     }
-    console.log("Signup:", {
-      fullName,
-      signupEmail,
-      mobileNumber,
-      country: selectedCountry,
-      signupPassword,
-    });
+
+    setIsLoading(true);
+    try {
+      await authSignup(signupEmail, fullName, signupPassword, mobileNumber);
+      toast({
+        title: "Signup successful",
+        description: "Your account has been created. Welcome!",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
@@ -343,10 +384,11 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                       {/* Login Button */}
                       <button
                         type="submit"
-                        className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        disabled={isLoading}
+                        className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                       >
-                        Login & Explore
-                        <ArrowRight className="h-5 w-5" />
+                        {isLoading ? "Logging in..." : "Login & Explore"}
+                        {!isLoading && <ArrowRight className="h-5 w-5" />}
                       </button>
                     </form>
 
@@ -720,11 +762,11 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                       {/* Sign Up Button */}
                       <button
                         type="submit"
-                        disabled={!isPasswordValid || !fullName || !signupEmail || !validateEmail(signupEmail) || !mobileNumber || !validateInternationalMobile(mobileNumber, selectedCountry.code) || !agreeTerms}
+                        disabled={!isPasswordValid || !fullName || !signupEmail || !validateEmail(signupEmail) || !mobileNumber || !validateInternationalMobile(mobileNumber, selectedCountry.code) || !agreeTerms || isLoading}
                         className="w-full mt-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                       >
-                        Create Account
-                        <ArrowRight className="h-5 w-5" />
+                        {isLoading ? "Creating Account..." : "Create Account"}
+                        {!isLoading && <ArrowRight className="h-5 w-5" />}
                       </button>
                     </form>
 

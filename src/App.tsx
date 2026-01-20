@@ -14,16 +14,20 @@ import TermsAndConditionPage from "./pages/TermsAndCondition";
 import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 import CookiePolicyPage from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ScrollToTop from "./components/ScrollToTop";
+import { CurrencyProvider } from "@/context/CurrencyContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
-import { CurrencyProvider } from "@/context/CurrencyContext";
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <CurrencyProvider>
-      <TooltipProvider>
+    <AuthProvider>
+      <CurrencyProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -40,12 +44,23 @@ const App = () => (
             <Route path="/terms-and-condition" element={<TermsAndConditionPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </CurrencyProvider>
+        </TooltipProvider>
+      </CurrencyProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

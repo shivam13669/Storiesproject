@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { LoginModal } from "./LoginModal";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useAuth } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navItems = [
   { name: "Home", to: "/", type: "route" as const },
@@ -19,6 +26,7 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
+  const { user, isAdmin, logout } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-white/10 text-white shadow-lg">
@@ -55,15 +63,53 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Currency + Login */}
+          {/* Currency + Login/User Menu */}
           <div className="hidden md:flex items-center gap-3">
             <CurrencyPicker value={currency} onChange={setCurrency} />
-            <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="text-white/90 hover:text-white font-medium transition-colors"
-            >
-              Login
-            </button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-white/90 hover:text-white font-medium transition-colors">
+                    Hi, {user.fullName.split(' ')[0]}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {!isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <a href="https://support.example.com" className="flex items-center gap-2 cursor-pointer">
+                      <HelpCircle className="h-4 w-4" />
+                      <span>Support & FAQs</span>
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="flex items-center gap-2 cursor-pointer text-red-600">
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="text-white/90 hover:text-white font-medium transition-colors"
+              >
+                Login
+              </button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -110,17 +156,45 @@ const Navigation = () => {
                   </a>
                 );
               })}
-              <div className="px-3 py-2 flex items-center gap-2">
-                <CurrencyPicker value={currency} onChange={setCurrency} className="flex-1" />
-                <button
-                  onClick={() => {
-                    setIsLoginModalOpen(true);
-                    setIsOpen(false);
-                  }}
-                  className="flex-none px-4 py-2 rounded-md bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors"
-                >
-                  Login
-                </button>
+              <div className="px-3 py-2 space-y-2">
+                <CurrencyPicker value={currency} onChange={setCurrency} className="w-full" />
+                {user ? (
+                  <div className="space-y-1">
+                    <p className="text-white/90 font-medium px-3 py-2 text-sm">Hi, {user.fullName.split(' ')[0]}</p>
+                    <Link
+                      to={isAdmin ? "/admin" : "/dashboard"}
+                      className="block px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {isAdmin ? "Admin Panel" : "Dashboard"}
+                    </Link>
+                    <a
+                      href="https://support.example.com"
+                      className="block px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                    >
+                      Support & FAQs
+                    </a>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsLoginModalOpen(true);
+                      setIsOpen(false);
+                    }}
+                    className="w-full px-4 py-2 rounded-md bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors"
+                  >
+                    Login
+                  </button>
+                )}
               </div>
             </div>
           </div>
