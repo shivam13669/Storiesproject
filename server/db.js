@@ -1,0 +1,132 @@
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DB_PATH = path.join(__dirname, '../database.db');
+
+let db = null;
+
+export function getDatabase() {
+  if (!db) {
+    db = new sqlite3.Database(DB_PATH, (err) => {
+      if (err) {
+        console.error('Database connection error:', err);
+      } else {
+        console.log('Connected to SQLite database');
+      }
+    });
+    db.configure('busyTimeout', 5000);
+  }
+  return db;
+}
+
+export function initializeDatabase() {
+  const database = getDatabase();
+
+  database.serialize(() => {
+    // Users table
+    database.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        fullName TEXT NOT NULL,
+        password TEXT NOT NULL,
+        phone TEXT,
+        testimonialAllowed INTEGER DEFAULT 0,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Admin table
+    database.run(`
+      CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Bookings table
+    database.run(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        destinationSlug TEXT NOT NULL,
+        packageSlug TEXT NOT NULL,
+        packageName TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT DEFAULT 'INR',
+        status TEXT DEFAULT 'pending',
+        bookingDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+        tripStartDate DATE,
+        tripEndDate DATE,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Testimonials table
+    database.run(`
+      CREATE TABLE IF NOT EXISTS testimonials (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
+        email TEXT,
+        name TEXT,
+        content TEXT NOT NULL,
+        rating INTEGER,
+        image TEXT,
+        isPublished INTEGER DEFAULT 1,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    console.log('Database tables initialized');
+  });
+}
+
+export function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    const database = getDatabase();
+    database.run(sql, params, function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ lastID: this.lastID, changes: this.changes });
+      }
+    });
+  });
+}
+
+export function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    const database = getDatabase();
+    database.get(sql, params, (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
+export function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    const database = getDatabase();
+    database.all(sql, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows || []);
+      }
+    });
+  });
+}
